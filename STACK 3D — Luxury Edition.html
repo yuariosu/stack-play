@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>STACK 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Space+Mono:wght@700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;
+  background:#05050f;
+  font-family:'Inter',sans-serif;color:#e8e4f0;
+  -webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none;
+  touch-action:manipulation}
+
+/* ── HUD ─────────────────────────────────────────── */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:10}
+
+#score-wrap{
+  position:absolute;top:22px;left:50%;transform:translateX(-50%);
+  text-align:center}
+#score-val{
+  font-family:'Space Mono',monospace;
+  font-size:clamp(3rem,12vw,6rem);font-weight:700;line-height:1;
+  background:linear-gradient(160deg,#ede9fe 0%,#a78bfa 40%,#7c3aed 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 22px rgba(167,139,250,.6));
+  transition:transform .13s cubic-bezier(.34,1.56,.64,1)}
+#score-val.pop{transform:scale(1.3)}
+
+#best-wrap{position:absolute;top:22px;right:20px;text-align:right}
+#best-label{
+  font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(232,228,240,.3);margin-bottom:2px}
+#best-val{
+  font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700;
+  color:#f59e0b;filter:drop-shadow(0 0 10px rgba(245,158,11,.45))}
+
+/* ── Screens ─────────────────────────────────────── */
+.screen{
+  position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:20;
+  transition:opacity .4s ease,visibility .4s ease}
+.screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+
+/* ── Start screen ────────────────────────────────── */
+#start-screen{background:transparent}
+
+/* Particle canvas behind everything on start */
+#start-canvas{
+  position:fixed;inset:0;z-index:19;pointer-events:none;
+  opacity:1;transition:opacity .6s ease}
+#start-canvas.gone{opacity:0}
+
+/* Glass card */
+.glass-card{
+  position:relative;
+  display:flex;flex-direction:column;align-items:center;
+  padding:52px 44px 48px;
+  background:linear-gradient(145deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,.03) 100%);
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:28px;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  box-shadow:
+    0 0 0 1px rgba(167,139,250,.15) inset,
+    0 40px 80px rgba(0,0,0,.5),
+    0 0 120px rgba(124,58,237,.12);
+  max-width:340px;width:calc(100vw - 48px);
+  overflow:hidden}
+
+/* shimmer sweep */
+.glass-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.06) 50%,transparent 62%);
+  background-size:200% 100%;
+  animation:shimmer 3.5s ease-in-out infinite;
+  pointer-events:none;border-radius:inherit}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* logo mark */
+.logo-wrap{
+  width:72px;height:72px;margin-bottom:28px;
+  background:linear-gradient(145deg,rgba(124,58,237,.25),rgba(109,40,217,.1));
+  border:1px solid rgba(167,139,250,.3);
+  border-radius:20px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 30px rgba(124,58,237,.2);
+  position:relative;overflow:hidden}
+.logo-wrap::after{
+  content:'';position:absolute;inset:-2px;
+  background:linear-gradient(135deg,rgba(167,139,250,.3),transparent 60%);
+  border-radius:inherit;animation:logoPulse 2.4s ease-in-out infinite}
+@keyframes logoPulse{0%,100%{opacity:.6}50%{opacity:1}}
+
+.game-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(3.2rem,14vw,5.5rem);font-weight:700;
+  letter-spacing:.08em;line-height:1;
+  background:linear-gradient(145deg,#ede9fe 0%,#c4b5fd 35%,#a78bfa 65%,#7c3aed 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(167,139,250,.5));
+  margin-bottom:10px;text-align:center}
+
+.divider{
+  width:40px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(167,139,250,.6),transparent);
+  margin:16px auto 20px}
+
+.game-sub{
+  font-size:14px;font-weight:400;letter-spacing:.01em;
+  color:rgba(232,228,240,.5);margin-bottom:40px;
+  text-align:center;line-height:1.8;max-width:220px}
+
+/* CTA button */
+.btn-primary{
+  font-family:'Inter',sans-serif;font-size:15px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:#fff;border:none;cursor:pointer;
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%);
+  border-radius:100px;padding:17px 56px;
+  box-shadow:
+    0 0 0 1px rgba(167,139,250,.3) inset,
+    0 0 50px rgba(124,58,237,.45),
+    0 8px 32px rgba(0,0,0,.4);
+  transition:transform .22s cubic-bezier(.34,1.56,.64,1),
+             box-shadow .22s ease}
+.btn-primary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(255,255,255,.15) 0%,transparent 60%);
+  border-radius:inherit}
+.btn-primary::after{
+  content:'';position:absolute;top:-50%;left:-60%;
+  width:40%;height:200%;
+  background:rgba(255,255,255,.12);
+  transform:rotate(25deg) translateX(-100%);
+  transition:transform .6s ease}
+.btn-primary:hover{
+  transform:scale(1.06);
+  box-shadow:0 0 0 1px rgba(167,139,250,.4) inset,0 0 70px rgba(124,58,237,.7),0 12px 40px rgba(0,0,0,.5)}
+.btn-primary:hover::after{transform:rotate(25deg) translateX(500%)}
+.btn-primary:active{transform:scale(.96)}
+
+/* corner accents */
+.corner{position:absolute;width:18px;height:18px;opacity:.4}
+.corner-tl{top:16px;left:16px;border-top:1px solid #a78bfa;border-left:1px solid #a78bfa}
+.corner-tr{top:16px;right:16px;border-top:1px solid #a78bfa;border-right:1px solid #a78bfa}
+.corner-bl{bottom:16px;left:16px;border-bottom:1px solid #a78bfa;border-left:1px solid #a78bfa}
+.corner-br{bottom:16px;right:16px;border-bottom:1px solid #a78bfa;border-right:1px solid #a78bfa}
+
+/* ── Game Over screen ────────────────────────────── */
+#gameover-screen{
+  background:rgba(5,5,15,.88);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+
+.go-card{
+  display:flex;flex-direction:column;align-items:center;
+  padding:48px 44px 44px;
+  background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:28px;
+  box-shadow:0 0 0 1px rgba(251,191,36,.08) inset,0 40px 80px rgba(0,0,0,.5);
+  max-width:320px;width:calc(100vw - 48px);
+  position:relative;overflow:hidden}
+.go-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.04) 50%,transparent 62%);
+  background-size:200% 100%;
+  animation:shimmer 4s ease-in-out infinite;pointer-events:none}
+
+.go-eyebrow{
+  font-size:10px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(232,228,240,.3);margin-bottom:8px}
+.go-score-val{
+  font-family:'Space Mono',monospace;
+  font-size:clamp(4.5rem,18vw,10rem);font-weight:700;line-height:1;margin-bottom:8px;
+  background:linear-gradient(145deg,#fde68a,#f59e0b,#ef4444);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 25px rgba(245,158,11,.4))}
+.go-best-msg{
+  font-size:13px;font-weight:500;color:#f59e0b;
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:40px;min-height:22px;
+  filter:drop-shadow(0 0 8px rgba(245,158,11,.5))}
+
+/* ── Perfect label ───────────────────────────────── */
+#perfect{
+  position:fixed;top:42%;left:50%;transform:translate(-50%,-50%);
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2.2rem,8vw,4rem);font-weight:700;letter-spacing:.12em;
+  color:#a7f3d0;
+  filter:drop-shadow(0 0 20px rgba(52,211,153,.9)) drop-shadow(0 0 60px rgba(52,211,153,.4));
+  pointer-events:none;z-index:30;opacity:0}
+#perfect.show{animation:pfx 1s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes pfx{
+  0%{opacity:0;transform:translate(-50%,-24%) scale(.5) rotateX(20deg)}
+  16%{opacity:1;transform:translate(-50%,-50%) scale(1.1) rotateX(0)}
+  55%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-72%) scale(.92)}}
+
+/* ── In-game hint ────────────────────────────────── */
+#hint{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(232,228,240,.25);z-index:10;pointer-events:none;
+  animation:blink 2.6s ease-in-out infinite}
+#hint.gone{display:none}
+@keyframes blink{0%,100%{opacity:.2}50%{opacity:.8}}
+
+/* ── Speed bar ───────────────────────────────────── */
+#spd{position:fixed;bottom:0;left:0;right:0;height:2px;
+  background:rgba(255,255,255,.04);z-index:10}
+#spd-fill{
+  height:100%;width:8%;
+  background:linear-gradient(90deg,#6d28d9,#a78bfa,#c4b5fd);
+  box-shadow:0 0 12px rgba(167,139,250,1),0 0 30px rgba(124,58,237,.5);
+  transition:width .6s ease}
+
+/* ── Debug ───────────────────────────────────────── */
+#dbg{position:fixed;top:0;left:0;z-index:9999;
+  background:rgba(0,0,0,.7);color:#0f0;
+  font:11px/1.6 monospace;padding:4px 8px;pointer-events:none;white-space:pre}
+</style>
+</head>
+<body>
+
+<!-- Particle background (start screen only) -->
+<canvas id="start-canvas"></canvas>
+
+<div id="hud">
+  <div id="score-wrap"><div id="score-val">0</div></div>
+  <div id="best-wrap">
+    <div id="best-label">BEST</div>
+    <div id="best-val">0</div>
+  </div>
+</div>
+<div id="perfect">PERFECT</div>
+<div id="hint">タップして止める</div>
+<div id="spd"><div id="spd-fill"></div></div>
+<div id="dbg"></div>
+
+<!-- ── Start Screen ─────────────────────────────── -->
+<div class="screen" id="start-screen">
+  <div class="glass-card">
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <div class="logo-wrap">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+        <rect x="4"  y="27" width="30" height="8" rx="3" fill="url(#g1)"/>
+        <rect x="8"  y="16" width="22" height="8" rx="3" fill="url(#g2)"/>
+        <rect x="12" y="5"  width="14" height="8" rx="3" fill="url(#g3)"/>
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#7c3aed"/><stop offset="1" stop-color="#6d28d9"/></linearGradient>
+          <linearGradient id="g2" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#7c3aed"/></linearGradient>
+          <linearGradient id="g3" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#a78bfa"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="game-title">STACK</div>
+    <div class="divider"></div>
+    <div class="game-sub">動くブロックをタップして<br>できるだけ高く積み上げよう</div>
+    <button class="btn-primary" id="btn-start">PLAY</button>
+  </div>
+</div>
+
+<!-- ── Game Over Screen ──────────────────────────── -->
+<div class="screen hidden" id="gameover-screen">
+  <div class="go-card">
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+    <div class="go-eyebrow">SCORE</div>
+    <div class="go-score-val" id="go-score-val">0</div>
+    <div class="go-best-msg"  id="go-best-msg"></div>
+    <button class="btn-primary" id="btn-restart">もう一度</button>
+  </div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://esm.sh/three@0.163.0","three/addons/":"https://esm.sh/three@0.163.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer }  from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }      from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+// ── DOM ────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const scoreEl  = $('score-val');
+const bestEl   = $('best-val');
+const spdFill  = $('spd-fill');
+const perfectEl= $('perfect');
+const hintEl   = $('hint');
+const dbgEl    = $('dbg');
+const startScr = $('start-screen');
+const goScr    = $('gameover-screen');
+const goScore  = $('go-score-val');
+const goBest   = $('go-best-msg');
+const startCvs = $('start-canvas');
+
+// ── Particle bg (2D canvas, start screen) ──────────────────────
+{
+  const c = startCvs, cx = c.getContext('2d');
+  let W, H, pts = [];
+
+  function resizePts() {
+    W = c.width  = innerWidth;
+    H = c.height = innerHeight;
+  }
+  resizePts();
+  window.addEventListener('resize', resizePts);
+
+  const N = 80;
+  for (let i = 0; i < N; i++) pts.push({
+    x: Math.random() * 2000, y: Math.random() * 2000,
+    vx: (Math.random() - .5) * 18,
+    vy: (Math.random() - .5) * 18,
+    r: .6 + Math.random() * 1.8,
+    a: Math.random(),
+    hue: 250 + Math.random() * 40
+  });
+
+  let lastPt = 0;
+  function animPts(ts) {
+    if (startCvs.classList.contains('gone')) return;
+    requestAnimationFrame(animPts);
+    const dt = Math.min((ts - lastPt) / 1000, .05); lastPt = ts;
+    cx.clearRect(0, 0, W, H);
+
+    // draw connections
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 130) {
+          cx.strokeStyle = `hsla(${pts[i].hue},70%,70%,${(1 - dist/130) * .12})`;
+          cx.lineWidth = .5;
+          cx.beginPath(); cx.moveTo(pts[i].x, pts[i].y); cx.lineTo(pts[j].x, pts[j].y); cx.stroke();
+        }
+      }
+    }
+
+    for (const p of pts) {
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.x < 0) p.x += W; if (p.x > W) p.x -= W;
+      if (p.y < 0) p.y += H; if (p.y > H) p.y -= H;
+      p.a = .35 + .35 * Math.sin(ts * .001 + p.x);
+      cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      cx.fillStyle = `hsla(${p.hue},80%,75%,${p.a})`;
+      cx.fill();
+    }
+  }
+  requestAnimationFrame(animPts);
+}
+
+// ── Three.js renderer ──────────────────────────────────────────
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+window.addEventListener('resize', () => {
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  composer.setSize(innerWidth, innerHeight);
+});
+
+// ── Scene ──────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05050f);
+scene.fog = new THREE.FogExp2(0x05050f, 0.013);
+
+// ── Camera ─────────────────────────────────────────────────────
+const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 400);
+const CAM_X = 11, CAM_Z = 11;
+let camY = 16;
+camera.position.set(CAM_X, camY, CAM_Z);
+camera.lookAt(0, 2, 0);
+
+// ── Lights ─────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xb0a0e0, 0.5));
+
+const sun = new THREE.DirectionalLight(0xfff5ee, 1.6);
+sun.position.set(10, 22, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 120;
+sun.shadow.camera.left = sun.shadow.camera.bottom = -22;
+sun.shadow.camera.right = sun.shadow.camera.top = 22;
+scene.add(sun);
+
+const rim = new THREE.DirectionalLight(0x818cf8, 1.0);
+rim.position.set(-8, 6, -10);
+scene.add(rim);
+
+const fill = new THREE.PointLight(0x7c3aed, 2.5, 50);
+fill.position.set(0, 5, 0);
+scene.add(fill);
+
+// ── Post-processing ────────────────────────────────────────────
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.65, 0.6, 0.68);
+composer.addPass(bloom);
+
+// ── Constants ──────────────────────────────────────────────────
+const BH        = 0.38;
+const GAP       = 0.06;
+const START_W   = 4.0;
+const MIN_SIZE  = 0.25;
+const BASE_SPD  = 2.8;
+const MAX_SPD   = 8.0;
+const PERFECT_T = 0.14;
+
+// ── Luxury palette: [top, side, clearcoat/emissive tint] ───────
+const PAL = [
+  { top:0x7c3aed, side:0x4c1d95, em:0x7c3aed },
+  { top:0x2563eb, side:0x1e3a8a, em:0x3b82f6 },
+  { top:0x0e7490, side:0x0c4a6e, em:0x22d3ee },
+  { top:0x059669, side:0x064e3b, em:0x10b981 },
+  { top:0xd97706, side:0x78350f, em:0xfbbf24 },
+  { top:0xdc2626, side:0x7f1d1d, em:0xf87171 },
+  { top:0x9333ea, side:0x581c87, em:0xc084fc },
+  { top:0xdb2777, side:0x831843, em:0xf472b6 },
+  { top:0x0284c7, side:0x0c4a6e, em:0x38bdf8 },
+  { top:0x16a34a, side:0x14532d, em:0x4ade80 },
+  { top:0xea580c, side:0x7c2d12, em:0xfb923c },
+  { top:0x0d9488, side:0x134e4a, em:0x2dd4bf },
+];
+
+// ── State ──────────────────────────────────────────────────────
+let phase     = 'start';
+let score     = 0;
+let best      = 0;
+let stack     = [];
+let slider    = null;
+let slideDir  = 1;
+let slideAxis = 'x';
+let speed     = BASE_SPD;
+let lookY     = 2;
+let particles = [];
+let fallers   = [];
+let fpsFrames = 0, fpsSec = 0, fpsDisplay = 0;
+
+// ── Block mesh factory (luxury materials) ─────────────────────
+function blockY(idx) { return idx * (BH + GAP) + BH / 2; }
+
+function makeMesh(w, d, ci, isSlider = false) {
+  const p = PAL[ci % PAL.length];
+
+  // Top face — glossy clearcoat
+  const topMat = new THREE.MeshPhysicalMaterial({
+    color: p.top,
+    roughness: 0.15,
+    metalness: 0.35,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.08,
+    reflectivity: 0.9,
+    envMapIntensity: 1.0,
+  });
+
+  // Side face — slightly matte with subtle sheen
+  const sideMat = new THREE.MeshPhysicalMaterial({
+    color: p.side,
+    roughness: 0.45,
+    metalness: 0.2,
+    clearcoat: 0.3,
+    clearcoatRoughness: 0.3,
+    sheen: 0.4,
+    sheenRoughness: 0.5,
+    sheenColor: new THREE.Color(p.top),
+  });
+
+  if (isSlider) {
+    topMat.emissive = new THREE.Color(p.em);
+    topMat.emissiveIntensity = 0.4;
+  }
+
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(w, BH, d),
+    [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]
+  );
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+
+  // Edge highlight — thin inset line
+  if (w > 0.1 && d > 0.1) {
+    const edge = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(w, BH, d)),
+      new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12 })
+    );
+    mesh.add(edge);
+  }
+
+  return mesh;
+}
+
+function disposeMesh(mesh) {
+  if (!mesh) return;
+  mesh.traverse(child => {
+    child.geometry?.dispose();
+    const mats = Array.isArray(child.material) ? child.material : [child.material];
+    mats.forEach(m => m?.dispose());
+  });
+  mesh.removeFromParent();
+}
+
+// ── Particles ──────────────────────────────────────────────────
+const pGeo = new THREE.SphereGeometry(0.07, 5, 5);
+
+function burst(cx, cy, cz, colorHex, n) {
+  for (let i = 0; i < n; i++) {
+    const mat  = new THREE.MeshBasicMaterial({ color: colorHex });
+    const mesh = new THREE.Mesh(pGeo, mat);
+    mesh.position.set(cx, cy, cz);
+    scene.add(mesh);
+    const a = Math.random() * Math.PI * 2;
+    const s = 1.5 + Math.random() * 4.5;
+    particles.push({
+      mesh, mat,
+      vx: Math.cos(a) * s, vy: 1.8 + Math.random() * 3.5, vz: Math.sin(a) * s,
+      life: 0.55 + Math.random() * 0.65
+    });
+  }
+}
+
+function tickParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.vy -= 10 * dt;
+    p.mesh.position.x += p.vx * dt;
+    p.mesh.position.y += p.vy * dt;
+    p.mesh.position.z += p.vz * dt;
+    p.life -= dt;
+    if (p.life <= 0) { p.mesh.removeFromParent(); p.mat.dispose(); particles.splice(i, 1); }
+  }
+}
+
+// ── Fallers ────────────────────────────────────────────────────
+function spawnFaller(cx, cy, cz, w, d, ci) {
+  if (w < 0.01 || d < 0.01) return;
+  const mesh = makeMesh(Math.max(w, 0.05), Math.max(d, 0.05), ci, false);
+  mesh.position.set(cx, cy, cz);
+  scene.add(mesh);
+  fallers.push({ mesh, vy: -(0.3 + Math.random() * 0.8), rx: (Math.random()-.5)*3, rz: (Math.random()-.5)*3, elapsed: 0 });
+}
+
+function tickFallers(dt) {
+  for (let i = fallers.length - 1; i >= 0; i--) {
+    const f = fallers[i];
+    f.elapsed += dt; f.vy -= 9 * dt;
+    f.mesh.position.y += f.vy * dt;
+    f.mesh.rotation.x += f.rx * dt;
+    f.mesh.rotation.z += f.rz * dt;
+    if (f.mesh.position.y < -14 || f.elapsed > 2.8) { disposeMesh(f.mesh); fallers.splice(i, 1); }
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────
+function initGame() {
+  stack.forEach(b => disposeMesh(b.mesh)); stack = [];
+  disposeMesh(slider?.mesh); slider = null;
+  particles.forEach(p => { p.mesh.removeFromParent(); p.mat.dispose(); }); particles = [];
+  fallers.forEach(f => disposeMesh(f.mesh)); fallers = [];
+
+  score = 0; speed = BASE_SPD; slideAxis = 'x'; slideDir = 1; lookY = 2; camY = 16;
+
+  const base = makeMesh(START_W, START_W, 0, false);
+  base.position.set(0, blockY(0), 0);
+  scene.add(base);
+  stack.push({ mesh: base, cx: 0, cz: 0, w: START_W, d: START_W, colorIdx: 0 });
+
+  camera.position.set(CAM_X, camY, CAM_Z);
+  camera.lookAt(0, lookY, 0);
+  updateHUD();
+  nextSlider();
+}
+
+// ── Spawn slider ───────────────────────────────────────────────
+function nextSlider() {
+  const prev = stack[stack.length - 1];
+  const ci   = stack.length % PAL.length;
+  const w = prev.w, d = prev.d;
+  const y = blockY(stack.length);
+
+  slideAxis = (stack.length % 2 === 1) ? 'x' : 'z';
+  slideDir  = 1;
+
+  const mesh = makeMesh(w, d, ci, true);
+  const startX = slideAxis === 'x' ? prev.cx - START_W * 2 : prev.cx;
+  const startZ = slideAxis === 'z' ? prev.cz - START_W * 2 : prev.cz;
+  mesh.position.set(startX, y, startZ);
+  scene.add(mesh);
+
+  slider = { mesh, w, d, colorIdx: ci };
+  speed = Math.min(BASE_SPD + score * 0.15, MAX_SPD);
+  updateSpeedBar();
+}
+
+// ── Place ──────────────────────────────────────────────────────
+function place() {
+  if (!slider || phase !== 'playing') return;
+  const s = slider, prev = stack[stack.length - 1];
+  let newCX, newCZ, newW, newD, perfect = false;
+
+  if (slideAxis === 'x') {
+    const sL = s.mesh.position.x - s.w/2, sR = s.mesh.position.x + s.w/2;
+    const pL = prev.cx - prev.w/2,        pR = prev.cx + prev.w/2;
+    const oL = Math.max(sL, pL), oR = Math.min(sR, pR), ov = oR - oL;
+    if (ov <= 0) { gameOver(); return; }
+    const delta = s.mesh.position.x - prev.cx;
+    perfect = Math.abs(delta) < PERFECT_T;
+    if (perfect) { newCX = prev.cx; newW = prev.w; }
+    else {
+      newCX = (oL + oR) / 2; newW = ov;
+      const cW = s.w - ov, cX = delta > 0 ? sR - cW/2 : sL + cW/2;
+      spawnFaller(cX, s.mesh.position.y, s.mesh.position.z, cW, s.d, s.colorIdx);
+    }
+    newCZ = prev.cz; newD = prev.d;
+  } else {
+    const sF = s.mesh.position.z - s.d/2, sB = s.mesh.position.z + s.d/2;
+    const pF = prev.cz - prev.d/2,        pB = prev.cz + prev.d/2;
+    const oF = Math.max(sF, pF), oB = Math.min(sB, pB), ov = oB - oF;
+    if (ov <= 0) { gameOver(); return; }
+    const delta = s.mesh.position.z - prev.cz;
+    perfect = Math.abs(delta) < PERFECT_T;
+    if (perfect) { newCZ = prev.cz; newD = prev.d; }
+    else {
+      newCZ = (oF + oB) / 2; newD = ov;
+      const cD = s.d - ov, cZ = delta > 0 ? sB - cD/2 : sF + cD/2;
+      spawnFaller(s.mesh.position.x, s.mesh.position.y, cZ, s.w, cD, s.colorIdx);
+    }
+    newCX = prev.cx; newW = prev.w;
+  }
+
+  if (newW < MIN_SIZE || newD < MIN_SIZE) { gameOver(); return; }
+
+  const idx = stack.length, y = blockY(idx);
+  const mesh = makeMesh(newW, newD, s.colorIdx, false);
+  mesh.position.set(newCX, y, newCZ);
+  scene.add(mesh);
+  stack.push({ mesh, cx: newCX, cz: newCZ, w: newW, d: newD, colorIdx: s.colorIdx });
+
+  disposeMesh(s.mesh); slider = null;
+  score++;
+  updateHUD(); popScore(); playSFX(perfect);
+  if (perfect) flashPerfect();
+
+  burst(newCX, y + BH/2, newCZ, PAL[s.colorIdx % PAL.length].em, perfect ? 26 : 10);
+  fill.position.y = y + 4;
+  lookY = y + 2;
+  nextSlider();
+}
+
+// ── Game over ──────────────────────────────────────────────────
+function gameOver() {
+  phase = 'gameover';
+  playSFXFail();
+  if (slider) { disposeMesh(slider.mesh); slider = null; }
+  burst(0, blockY(stack.length - 1) + BH/2, 0, 0xf87171, 28);
+  hintEl.classList.add('gone');
+  if (score > best) best = score;
+  goScore.textContent = score;
+  goBest.textContent  = score > 0 && score === best ? '🏆 新記録！' : '';
+  bestEl.textContent  = best;
+  setTimeout(() => goScr.classList.remove('hidden'), 800);
+}
+
+// ── HUD ────────────────────────────────────────────────────────
+function updateHUD()    { scoreEl.textContent = score; bestEl.textContent = best; }
+function popScore()     { scoreEl.classList.remove('pop'); void scoreEl.offsetWidth; scoreEl.classList.add('pop'); setTimeout(() => scoreEl.classList.remove('pop'), 260); }
+function flashPerfect() { perfectEl.classList.remove('show'); void perfectEl.offsetWidth; perfectEl.classList.add('show'); }
+function updateSpeedBar() {
+  const p = ((speed - BASE_SPD) / (MAX_SPD - BASE_SPD)) * 88 + 12;
+  spdFill.style.width = p + '%';
+}
+
+// ── Audio ──────────────────────────────────────────────────────
+let actx = null;
+function ensureAudio() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  actx.resume();
+}
+function beep(freq, dur, type = 'sine', vol = 0.1) {
+  if (!actx) return;
+  try {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
+    o.connect(g).connect(actx.destination);
+    o.start(); o.stop(actx.currentTime + dur);
+  } catch(_) {}
+}
+function playSFX(perfect) {
+  const f = 300 + score * 14;
+  if (perfect) {
+    beep(880, 0.1, 'sine', 0.17); setTimeout(() => beep(1320, 0.12, 'sine', 0.12), 65); setTimeout(() => beep(1760, 0.18, 'sine', 0.08), 135);
+  } else { beep(Math.min(f, 680), 0.08, 'square', 0.07); }
+}
+function playSFXFail() {
+  beep(200, 0.08, 'sawtooth', 0.13); setTimeout(() => beep(140, 0.12, 'sawtooth', 0.1), 85); setTimeout(() => beep(90, 0.22, 'sawtooth', 0.07), 185);
+}
+
+// ── Main loop ──────────────────────────────────────────────────
+let lastTs = 0;
+(function mainLoop(rawTs) {
+  requestAnimationFrame(mainLoop);
+  const dt = Math.min((rawTs - lastTs) / 1000, 0.05);
+  lastTs = rawTs;
+
+  fpsFrames++; fpsSec += dt;
+  if (fpsSec >= 1) {
+    fpsDisplay = Math.round(fpsFrames / fpsSec);
+    fpsFrames = 0; fpsSec = 0;
+    const ri = renderer.info;
+    dbgEl.textContent = `FPS ${fpsDisplay}  Draw ${ri.render.calls}  Tri ${(ri.render.triangles/1000).toFixed(1)}k`;
+  }
+
+  if (phase === 'playing') {
+    // Slider movement
+    if (slider) {
+      const s = slider, prev = stack[stack.length - 1];
+      const trv = speed * dt * slideDir, lim = START_W * 1.7;
+      if (slideAxis === 'x') {
+        s.mesh.position.x += trv;
+        if (s.mesh.position.x > prev.cx + lim) slideDir = -1;
+        if (s.mesh.position.x < prev.cx - lim) slideDir =  1;
+      } else {
+        s.mesh.position.z += trv;
+        if (s.mesh.position.z > prev.cz + lim) slideDir = -1;
+        if (s.mesh.position.z < prev.cz - lim) slideDir =  1;
+      }
+      // Float + emissive pulse
+      s.mesh.position.y = blockY(stack.length) + Math.sin(rawTs * 0.0025) * 0.045;
+      const emi = 0.3 + 0.25 * Math.sin(rawTs * 0.004);
+      if (s.mesh.material[2]?.emissive) s.mesh.material[2].emissiveIntensity = emi;
+    }
+
+    tickParticles(dt);
+    tickFallers(dt);
+
+    // Camera
+    const tCamY = Math.max(16, (lookY - 2) + 16);
+    camY += (tCamY - camY) * Math.min(dt * 3, 1);
+    camera.position.set(CAM_X, camY, CAM_Z);
+    camera.lookAt(0, lookY, 0);
+
+    // Point light slow drift
+    fill.position.x = Math.sin(rawTs * 0.0005) * 2;
+    fill.position.z = Math.cos(rawTs * 0.0005) * 2;
+  }
+
+  renderer.info.reset();
+  composer.render();
+})(0);
+
+// ── Input ──────────────────────────────────────────────────────
+renderer.domElement.addEventListener('click',      ()   => { if (phase === 'playing') place(); });
+renderer.domElement.addEventListener('touchstart', e    => { e.preventDefault(); if (phase === 'playing') place(); }, { passive: false });
+document.addEventListener('keydown',               e    => { if (e.code === 'Space') { e.preventDefault(); if (phase === 'playing') place(); } });
+
+// ── Start / Restart ────────────────────────────────────────────
+function startGame() {
+  ensureAudio();
+  phase = 'playing';
+  startScr.classList.add('hidden');
+  startCvs.classList.add('gone');
+  goScr.classList.add('hidden');
+  hintEl.classList.remove('gone');
+  initGame();
+}
+$('btn-start').addEventListener('click',   e => { e.stopPropagation(); startGame(); });
+$('btn-restart').addEventListener('click', e => { e.stopPropagation(); startGame(); });
+
+// ── Test hooks ─────────────────────────────────────────────────
+window.render_game_to_text = () => JSON.stringify({
+  phase, score, stackLen: stack.length, axis: slideAxis,
+  sliderX: slider ? +slider.mesh.position.x.toFixed(2) : null,
+  sliderZ: slider ? +slider.mesh.position.z.toFixed(2) : null,
+  topW: stack.length ? +stack[stack.length-1].w.toFixed(2) : null,
+  topD: stack.length ? +stack[stack.length-1].d.toFixed(2) : null,
+});
+</script>
+<script data-pplx-inline-edit>
+(function(){
+  if(window===window.top)return;
+  function inlineAll(orig,clone){
+    if(orig.nodeType!==1)return;
+    try{
+      var cs=getComputedStyle(orig);
+      var t='';
+      for(var i=0;i<cs.length;i++){t+=cs[i]+':'+cs.getPropertyValue(cs[i])+';';}
+      clone.style.cssText=t;
+    }catch(e){}
+    var oc=orig.children,cc=clone.children;
+    for(var j=0;j<oc.length&&j<cc.length;j++){inlineAll(oc[j],cc[j]);}
+  }
+  function stripExternal(clone){
+    var imgs=clone.querySelectorAll('img');
+    for(var i=0;i<imgs.length;i++){
+      var s=imgs[i].getAttribute('src');
+      if(s&&!s.startsWith('data:'))imgs[i].removeAttribute('src');
+    }
+    var all=clone.querySelectorAll('*');
+    for(var i=0;i<all.length;i++){
+      var st=all[i].style.cssText;
+      if(st&&st.indexOf('url(')>=0){
+        all[i].style.cssText=st.replace(/url\(["']?(?!data:)[^)"']*["']?\)/gi,'none');
+      }
+    }
+  }
+  window.addEventListener('message',function(e){
+    if(!e.data||e.data.type!=='INLINE_EDIT_CAPTURE_REQUEST')return;
+    var scrollX=window.scrollX||window.pageXOffset||0;
+    var scrollY=window.scrollY||window.pageYOffset||0;
+    var w=window.innerWidth,h=window.innerHeight;
+    try{
+      var clone=document.documentElement.cloneNode(true);
+      var rm=clone.querySelectorAll('script,link[rel="stylesheet"],style');
+      for(var i=0;i<rm.length;i++){rm[i].remove();}
+      inlineAll(document.documentElement,clone);
+      stripExternal(clone);
+      var html=new XMLSerializer().serializeToString(clone);
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'
+        +'<foreignObject width="100%" height="100%">'
+        +'<div xmlns="http://www.w3.org/1999/xhtml" style="width:'+w+'px;height:'+h+'px;overflow:hidden">'
+        +'<div style="transform:translate(-'+scrollX+'px,-'+scrollY+'px);transform-origin:top left">'
+        +html+'</div></div></foreignObject></svg>';
+      var svgUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0);
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:c.toDataURL('image/png'),scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.onerror=function(){
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.src=svgUrl;
+    }catch(err){
+      window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+    }
+  });
+})();
+</script></body>
+</html>
