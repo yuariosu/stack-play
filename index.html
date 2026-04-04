@@ -247,6 +247,97 @@ html,body{width:100%;height:100%;overflow:hidden;
   60%{opacity:1;transform:translate(-50%,-50%) scale(1)}
   100%{opacity:0;transform:translate(-50%,-70%) scale(.95)}}
 
+/* ── Zone flash ──────────────────────────────────── */
+#zone-flash{
+  position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  pointer-events:none;z-index:28;opacity:0}
+#zone-flash.show{animation:zonefx 2.2s cubic-bezier(.22,1,.36,1) forwards}
+.zone-emoji{font-size:clamp(2.5rem,8vw,4.5rem);margin-bottom:8px}
+.zone-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1.8rem,7vw,3.2rem);font-weight:700;letter-spacing:.14em;
+  color:#e8e4f0;filter:drop-shadow(0 0 30px rgba(255,255,255,.5))}
+@keyframes zonefx{
+  0%{opacity:0;transform:scale(.7)}
+  15%{opacity:1;transform:scale(1.06)}
+  35%{opacity:1;transform:scale(1)}
+  75%{opacity:1}
+  100%{opacity:0;transform:scale(.95) translateY(-20px)}}
+
+/* ── Block type badge ────────────────────────────── */
+#block-next{
+  position:fixed;top:88px;right:20px;z-index:10;
+  text-align:right;pointer-events:none}
+#block-next-label{
+  font-size:8px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(232,228,240,.25);margin-bottom:4px}
+#block-type-badge{
+  font-family:'Space Mono',monospace;font-size:11px;font-weight:700;
+  letter-spacing:.12em;padding:5px 10px;
+  border:1px solid currentColor;border-radius:6px;
+  display:inline-block;transition:all .3s ease}
+#block-type-badge.hidden{opacity:0;transform:scale(.8)}
+#block-type-badge.pop{animation:badgepop .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes badgepop{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+/* ── Altitude gauge ──────────────────────────────── */
+#altitude-gauge{
+  position:fixed;right:20px;top:50%;transform:translateY(-50%);
+  width:4px;height:min(280px,40vh);
+  background:rgba(255,255,255,.05);border-radius:2px;z-index:10;
+  pointer-events:none}
+#alt-fill{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(to top,#7c3aed,#22d3ee,#4ade80,#fbbf24,#f0f0f0);
+  border-radius:2px;transition:height .6s ease;height:0%}
+.alt-mark{
+  position:absolute;left:8px;font-size:8px;letter-spacing:.1em;
+  color:rgba(232,228,240,.25);white-space:nowrap;transform:translateY(50%)}
+.alt-mark::before{
+  content:'';position:absolute;left:-10px;top:50%;width:6px;height:1px;
+  background:rgba(232,228,240,.2);transform:translateY(-50%)}
+
+/* ── Lean danger ring ────────────────────────────── */
+#lean-ring{
+  position:fixed;inset:4px;border-radius:16px;
+  border:2px solid transparent;z-index:9;pointer-events:none;
+  transition:border-color .3s,box-shadow .3s;opacity:0}
+
+/* ── Wind warning ────────────────────────────────── */
+#wind-warn{
+  position:fixed;top:38%;left:50%;transform:translate(-50%,-50%);
+  font-family:'Space Mono',monospace;font-size:clamp(.9rem,3vw,1.3rem);
+  font-weight:700;letter-spacing:.2em;
+  color:#38bdf8;filter:drop-shadow(0 0 16px rgba(56,189,248,.8));
+  pointer-events:none;z-index:30;opacity:0}
+#wind-warn.show{animation:windfx 1.4s ease forwards}
+@keyframes windfx{
+  0%{opacity:0;transform:translate(-50%,-60%) scale(.8)}
+  20%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  70%{opacity:1}
+  100%{opacity:0;transform:translate(-50%,-40%)}}
+
+/* ── Milestone celebration ───────────────────────── */
+#milestone{
+  position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;
+  pointer-events:none;z-index:29;opacity:0}
+#milestone.show{animation:milestonefx 2.8s cubic-bezier(.22,1,.36,1) forwards}
+#milestone-emoji{font-size:clamp(3rem,12vw,6rem)}
+#milestone-text{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1.4rem,5vw,2.4rem);font-weight:700;letter-spacing:.1em;
+  background:linear-gradient(135deg,#fde68a,#f59e0b,#fde68a);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 20px rgba(251,191,36,.6))}
+@keyframes milestonefx{
+  0%{opacity:0;transform:scale(.5)}
+  18%{opacity:1;transform:scale(1.08)}
+  35%{opacity:1;transform:scale(1)}
+  72%{opacity:1}
+  100%{opacity:0;transform:translateY(-30px) scale(.95)}}
+
 /* ── Pause overlay ───────────────────────────────── */
 #pause-overlay{
   position:fixed;inset:0;z-index:25;
@@ -344,6 +435,41 @@ html,body{width:100%;height:100%;overflow:hidden;
   <div id="spd-label">SPEED</div>
   <div id="spd"><div id="spd-fill"></div></div>
 </div>
+
+<!-- Block type next indicator -->
+<div id="block-next">
+  <div id="block-next-label">NEXT</div>
+  <div id="block-type-badge" class="hidden"></div>
+</div>
+
+<!-- Altitude gauge (right side) -->
+<div id="altitude-gauge">
+  <div id="alt-fill"></div>
+  <div class="alt-mark" style="bottom:0%">0</div>
+  <div class="alt-mark" style="bottom:10%">10</div>
+  <div class="alt-mark" style="bottom:25%">25</div>
+  <div class="alt-mark" style="bottom:50%">50</div>
+  <div class="alt-mark" style="bottom:100%">100</div>
+</div>
+
+<!-- Lean danger ring -->
+<div id="lean-ring"></div>
+
+<!-- Zone flash -->
+<div id="zone-flash">
+  <div class="zone-emoji" id="zone-emoji"></div>
+  <div class="zone-name" id="zone-name"></div>
+</div>
+
+<!-- Wind warning -->
+<div id="wind-warn">💨 WIND!</div>
+
+<!-- Milestone celebration -->
+<div id="milestone">
+  <div id="milestone-emoji"></div>
+  <div id="milestone-text"></div>
+</div>
+
 <div id="dbg"></div>
 
 <!-- Pause overlay -->
@@ -529,7 +655,8 @@ camera.position.set(CAM_X, camY, CAM_Z);
 camera.lookAt(0, 2, 0);
 
 // ── Lights ─────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xb0a0e0, 0.5));
+const ambientLight = new THREE.AmbientLight(0xb0a0e0, 0.5);
+scene.add(ambientLight);
 
 const sun = new THREE.DirectionalLight(0xfff5ee, 1.6);
 sun.position.set(10, 22, 8);
@@ -579,6 +706,41 @@ const PAL = [
   { top:0x0d9488, side:0x134e4a, em:0x2dd4bf },
 ];
 
+// ── Altitude zones ─────────────────────────────────────────────
+const ZONES = [
+  { minScore:  0, id:'ground', emoji:'🏙', name:'地上',    bg:0x05050f, fog:0x05050f, fogD:0.013, ambC:0xb0a0e0, ambI:0.50, bloomStr:0.65, starOpa:0.0 },
+  { minScore: 10, id:'clouds', emoji:'☁',  name:'雲の上',  bg:0x070820, fog:0x0f1838, fogD:0.009, ambC:0xb0c0f0, ambI:0.60, bloomStr:0.70, starOpa:0.0 },
+  { minScore: 25, id:'strato', emoji:'🌤', name:'成層圏',  bg:0x020812, fog:0x020812, fogD:0.006, ambC:0x8090c0, ambI:0.45, bloomStr:0.75, starOpa:0.4 },
+  { minScore: 50, id:'space',  emoji:'🌌', name:'宇宙',    bg:0x000006, fog:0x000008, fogD:0.003, ambC:0x302060, ambI:0.35, bloomStr:0.90, starOpa:0.9 },
+  { minScore:100, id:'lunar',  emoji:'🌙', name:'月軌道',  bg:0x000000, fog:0x000003, fogD:0.002, ambC:0x506070, ambI:0.55, bloomStr:1.10, starOpa:1.0 },
+];
+// Milestones to celebrate (score values)
+const MILESTONES = {
+  10:  { emoji:'☁',  text:'雲を突き破れ！' },
+  25:  { emoji:'🌤', text:'成層圏突入！' },
+  50:  { emoji:'🌌', text:'宇宙へ！' },
+  75:  { emoji:'⭐', text:'星をつかめ！' },
+  100: { emoji:'🌙', text:'月軌道到達！' },
+};
+
+// ── Block types ────────────────────────────────────────────────
+const BTYPES = {
+  NORMAL: { label:null,    color:null,      speedMult:1.0, perfectMult:1.0, scoreBonus:0, widthMult:1.0, isBomb:false },
+  WIDE:   { label:'WIDE',  color:'#22d3ee', speedMult:1.0, perfectMult:1.0, scoreBonus:0, widthMult:1.35,isBomb:false },
+  STICKY: { label:'STICKY',color:'#4ade80', speedMult:0.85,perfectMult:3.0, scoreBonus:0, widthMult:1.0, isBomb:false },
+  TURBO:  { label:'TURBO', color:'#fbbf24', speedMult:1.9, perfectMult:1.0, scoreBonus:1, widthMult:1.0, isBomb:false },
+  BOMB:   { label:'BOMB',  color:'#f87171', speedMult:1.2, perfectMult:1.0, scoreBonus:3, widthMult:1.0, isBomb:true  },
+};
+function pickNextBlockType(sc) {
+  if (sc < 5) return 'NORMAL';
+  const r = Math.random();
+  if (r < 0.52) return 'NORMAL';
+  if (r < 0.67) return 'WIDE';
+  if (r < 0.79) return 'STICKY';
+  if (r < 0.90) return 'TURBO';
+  return 'BOMB';
+}
+
 // ── LocalStorage helpers ───────────────────────────────────────
 const LS_KEY = 'stack3d_scores';
 function loadScores() {
@@ -594,23 +756,38 @@ function saveScore(s) {
 }
 
 // ── State ──────────────────────────────────────────────────────
-let phase       = 'start';
-let score       = 0;
-let best        = loadScores()[0] || 0;
-let stack       = [];
-let slider      = null;
-let slideDir    = 1;
-let slideAxis   = 'x';
-let speed       = BASE_SPD;
-let lookY       = 2;
-let particles   = [];
-let fallers     = [];
-let fpsFrames   = 0, fpsSec = 0, fpsDisplay = 0;
-let perfectCount= 0;
-let comboCount  = 0;
-let maxCombo    = 0;
-let muted       = false;
-let paused      = false;
+let phase        = 'start';
+let score        = 0;
+let best         = loadScores()[0] || 0;
+let stack        = [];
+let slider       = null;
+let slideDir     = 1;
+let slideAxis    = 'x';
+let speed        = BASE_SPD;
+let lookY        = 2;
+let particles    = [];
+let fallers      = [];
+let fpsFrames    = 0, fpsSec = 0, fpsDisplay = 0;
+let perfectCount = 0;
+let comboCount   = 0;
+let maxCombo     = 0;
+let muted        = false;
+let paused       = false;
+
+// Zone state
+let currentZoneIdx = 0;
+
+// Stars
+let starPoints  = null;
+let starOpacity = 0;
+
+// Lean physics
+const lean = { x:0, z:0, vx:0, vz:0 };
+let windTimer = 0;
+
+// Block type state
+let currentBlockType = 'NORMAL';
+let nextBlockType    = 'NORMAL';
 
 // ── Block mesh factory (luxury materials) ─────────────────────
 function blockY(idx) { return idx * (BH + GAP) + BH / 2; }
@@ -726,6 +903,145 @@ function tickFallers(dt) {
   }
 }
 
+// ── Stars ──────────────────────────────────────────────────────
+function initStars() {
+  if (starPoints) { scene.remove(starPoints); starPoints.geometry.dispose(); starPoints.material.dispose(); }
+  const N = 800;
+  const pos = new Float32Array(N * 3);
+  const col = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi   = Math.acos(2 * Math.random() - 1);
+    const r     = 90 + Math.random() * 110;
+    pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+    pos[i*3+1] = Math.abs(r * Math.cos(phi)) + 10;
+    pos[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
+    // slight color variation: blue-white to warm-white
+    const t = Math.random();
+    col[i*3]   = 0.85 + t * 0.15;
+    col[i*3+1] = 0.88 + t * 0.12;
+    col[i*3+2] = 1.0;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+  starPoints = new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.28, sizeAttenuation: true, transparent: true, opacity: 0,
+    vertexColors: true
+  }));
+  scene.add(starPoints);
+}
+
+// ── Zone system ────────────────────────────────────────────────
+function getZoneIdx(sc) {
+  let z = 0;
+  for (let i = 0; i < ZONES.length; i++) { if (sc >= ZONES[i].minScore) z = i; }
+  return z;
+}
+
+function applyZone(zi, flash = true) {
+  const z = ZONES[zi];
+  scene.background = new THREE.Color(z.bg);
+  scene.fog = new THREE.FogExp2(z.fog, z.fogD);
+  if (ambientLight) { ambientLight.color.set(z.ambC); ambientLight.intensity = z.ambI; }
+  bloom.strength = z.bloomStr;
+  if (flash) {
+    $('zone-emoji').textContent = z.emoji;
+    $('zone-name').textContent  = z.name;
+    const zf = $('zone-flash');
+    zf.classList.remove('show'); void zf.offsetWidth; zf.classList.add('show');
+  }
+}
+
+function checkZone(sc) {
+  const zi = getZoneIdx(sc);
+  if (zi !== currentZoneIdx) {
+    currentZoneIdx = zi;
+    applyZone(zi, true);
+  }
+  // Update altitude bar (cap at 100 for fill)
+  const pct = Math.min(sc / 100, 1) * 100;
+  $('alt-fill').style.height = pct + '%';
+  // Update star opacity
+  const targetOpa = ZONES[zi].starOpa;
+  if (starPoints) starPoints.material.opacity += (targetOpa - starPoints.material.opacity) * 0.05;
+  // Milestone check
+  if (MILESTONES[sc]) {
+    const m = MILESTONES[sc];
+    $('milestone-emoji').textContent = m.emoji;
+    $('milestone-text').textContent  = m.text;
+    const mel = $('milestone');
+    mel.classList.remove('show'); void mel.offsetWidth; mel.classList.add('show');
+    // Extra particle burst for milestone
+    burst(0, blockY(stack.length) + BH/2, 0, 0xfbbf24, 40);
+    beep(1046, 0.15, 'sine', 0.18);
+    setTimeout(() => beep(1318, 0.15, 'sine', 0.15), 120);
+    setTimeout(() => beep(1568, 0.25, 'sine', 0.12), 240);
+  }
+}
+
+// ── Lean physics ───────────────────────────────────────────────
+const LEAN_SPRING = 1.4, LEAN_DAMP = 0.86, LEAN_MAX = 2.0;
+
+function tickLean(dt) {
+  if (stack.length < 6) return;
+  lean.vx += -lean.x * LEAN_SPRING * dt;
+  lean.vz += -lean.z * LEAN_SPRING * dt;
+  const dk = Math.pow(LEAN_DAMP, dt * 60);
+  lean.vx *= dk; lean.vz *= dk;
+  lean.x  += lean.vx * dt;
+  lean.z  += lean.vz * dt;
+  const mag = Math.sqrt(lean.x*lean.x + lean.z*lean.z);
+  if (mag > LEAN_MAX) { lean.x = lean.x/mag*LEAN_MAX; lean.z = lean.z/mag*LEAN_MAX; }
+  // Lean danger ring
+  const danger = Math.min(mag / LEAN_MAX, 1);
+  const ring = $('lean-ring');
+  if (danger > 0.25) {
+    const d = (danger - 0.25) / 0.75;
+    ring.style.opacity = d;
+    ring.style.borderColor = `hsl(${20 - d*20},100%,${50 + d*20}%)`;
+    ring.style.boxShadow = `inset 0 0 ${30*d}px hsla(${20-d*20},100%,60%,${0.2*d})`;
+  } else {
+    ring.style.opacity = 0;
+  }
+}
+
+function applyLeanImpulse(deltaX, deltaZ) {
+  const ht = Math.min(stack.length / 35, 2.0);
+  lean.vx += deltaX * 0.3 * ht;
+  lean.vz += deltaZ * 0.3 * ht;
+}
+
+function tickWind(dt) {
+  if (score < 15) return;
+  windTimer -= dt;
+  if (windTimer <= 0) {
+    const baseInterval = Math.max(4, 10 - score * 0.06);
+    windTimer = baseInterval + (Math.random() - 0.5) * 2;
+    const force = (0.5 + Math.random() * 0.7) * Math.min(score / 25, 2.0);
+    const angle = Math.random() * Math.PI * 2;
+    lean.vx += Math.cos(angle) * force;
+    lean.vz += Math.sin(angle) * force;
+    // Show wind warning
+    const ww = $('wind-warn');
+    ww.classList.remove('show'); void ww.offsetWidth; ww.classList.add('show');
+    haptic([20, 30, 20]);
+  }
+}
+
+// ── Block type UI ──────────────────────────────────────────────
+function refreshBlockBadge() {
+  const badge = $('block-type-badge');
+  if (nextBlockType === 'NORMAL') { badge.classList.add('hidden'); return; }
+  const bt = BTYPES[nextBlockType];
+  badge.textContent = bt.label;
+  badge.style.color = bt.color;
+  badge.style.borderColor = bt.color;
+  badge.style.boxShadow = `0 0 10px ${bt.color}55`;
+  badge.classList.remove('hidden');
+  badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop');
+}
+
 // ── Init ───────────────────────────────────────────────────────
 function initGame() {
   stack.forEach(b => disposeMesh(b.mesh)); stack = [];
@@ -735,6 +1051,24 @@ function initGame() {
 
   score = 0; speed = BASE_SPD; slideAxis = 'x'; slideDir = 1; lookY = 2; camY = 16;
   perfectCount = 0; comboCount = 0; maxCombo = 0;
+
+  // Reset lean + wind
+  lean.x = 0; lean.z = 0; lean.vx = 0; lean.vz = 0;
+  windTimer = 8;
+
+  // Reset block types
+  currentBlockType = 'NORMAL';
+  nextBlockType    = pickNextBlockType(0);
+  refreshBlockBadge();
+
+  // Reset zone
+  currentZoneIdx = 0;
+  applyZone(0, false);
+  $('alt-fill').style.height = '0%';
+  $('lean-ring').style.opacity = 0;
+
+  // Init stars
+  initStars();
 
   const base = makeMesh(START_W, START_W, 0, false);
   base.position.set(0, blockY(0), 0);
@@ -751,60 +1085,111 @@ function initGame() {
 function nextSlider() {
   const prev = stack[stack.length - 1];
   const ci   = stack.length % PAL.length;
-  const w = prev.w, d = prev.d;
-  const y = blockY(stack.length);
+  const y    = blockY(stack.length);
+
+  // Advance block type
+  currentBlockType = nextBlockType;
+  nextBlockType    = pickNextBlockType(score);
+  refreshBlockBadge();
+
+  const bt = BTYPES[currentBlockType];
+
+  // WIDE block: restore some lost width
+  let w = prev.w, d = prev.d;
+  if (currentBlockType === 'WIDE') {
+    w = Math.min(prev.w * bt.widthMult, START_W);
+    d = Math.min(prev.d * bt.widthMult, START_W);
+  }
 
   slideAxis = (stack.length % 2 === 1) ? 'x' : 'z';
   slideDir  = 1;
 
   const mesh = makeMesh(w, d, ci, true);
+
+  // BOMB/TURBO/STICKY: tint the emissive
+  if (bt.color) {
+    const col = new THREE.Color(bt.color);
+    mesh.material[2].emissive = col;
+    mesh.material[2].emissiveIntensity = 0.6;
+  }
+
+  // BOMB: add pulsing ring of sparkles
   const startX = slideAxis === 'x' ? prev.cx - START_W * 2 : prev.cx;
   const startZ = slideAxis === 'z' ? prev.cz - START_W * 2 : prev.cz;
   mesh.position.set(startX, y, startZ);
   scene.add(mesh);
 
-  slider = { mesh, w, d, colorIdx: ci };
-  speed = Math.min(BASE_SPD + score * 0.15, MAX_SPD);
+  const effectivePerfectT = PERFECT_T * bt.perfectMult;
+  speed = Math.min(BASE_SPD + score * 0.15, MAX_SPD) * bt.speedMult;
+  slider = { mesh, w, d, colorIdx: ci, blockType: currentBlockType, effectivePerfectT };
   updateSpeedBar();
+
+  // Announce special block type with a beep
+  if (currentBlockType !== 'NORMAL') {
+    const freqs = { WIDE:440, STICKY:550, TURBO:660, BOMB:330 };
+    beep(freqs[currentBlockType] || 440, 0.1, 'sine', 0.09);
+  }
 }
 
 // ── Place ──────────────────────────────────────────────────────
 function place() {
   if (!slider || phase !== 'playing') return;
   const s = slider, prev = stack[stack.length - 1];
+  const bt = BTYPES[s.blockType || 'NORMAL'];
+  const ept = s.effectivePerfectT || PERFECT_T;
   let newCX, newCZ, newW, newD, perfect = false;
+
+  // Lean offset shifts the effective "center" for PERFECT detection
+  const leanOffX = slideAxis === 'x' ? lean.x * 0.35 : 0;
+  const leanOffZ = slideAxis === 'z' ? lean.z * 0.35 : 0;
 
   if (slideAxis === 'x') {
     const sL = s.mesh.position.x - s.w/2, sR = s.mesh.position.x + s.w/2;
     const pL = prev.cx - prev.w/2,        pR = prev.cx + prev.w/2;
     const oL = Math.max(sL, pL), oR = Math.min(sR, pR), ov = oR - oL;
-    if (ov <= 0) { gameOver(); return; }
-    const delta = s.mesh.position.x - prev.cx;
-    perfect = Math.abs(delta) < PERFECT_T;
+    if (ov <= 0) {
+      if (bt.isBomb) { bombMiss(); return; }
+      gameOver(); return;
+    }
+    const delta = s.mesh.position.x - (prev.cx + leanOffX);
+    perfect = Math.abs(delta) < ept;
     if (perfect) { newCX = prev.cx; newW = prev.w; }
     else {
       newCX = (oL + oR) / 2; newW = ov;
       const cW = s.w - ov, cX = delta > 0 ? sR - cW/2 : sL + cW/2;
       spawnFaller(cX, s.mesh.position.y, s.mesh.position.z, cW, s.d, s.colorIdx);
+      applyLeanImpulse(delta * 0.5, 0);
     }
     newCZ = prev.cz; newD = prev.d;
   } else {
     const sF = s.mesh.position.z - s.d/2, sB = s.mesh.position.z + s.d/2;
     const pF = prev.cz - prev.d/2,        pB = prev.cz + prev.d/2;
     const oF = Math.max(sF, pF), oB = Math.min(sB, pB), ov = oB - oF;
-    if (ov <= 0) { gameOver(); return; }
-    const delta = s.mesh.position.z - prev.cz;
-    perfect = Math.abs(delta) < PERFECT_T;
+    if (ov <= 0) {
+      if (bt.isBomb) { bombMiss(); return; }
+      gameOver(); return;
+    }
+    const delta = s.mesh.position.z - (prev.cz + leanOffZ);
+    perfect = Math.abs(delta) < ept;
     if (perfect) { newCZ = prev.cz; newD = prev.d; }
     else {
       newCZ = (oF + oB) / 2; newD = ov;
       const cD = s.d - ov, cZ = delta > 0 ? sB - cD/2 : sF + cD/2;
       spawnFaller(s.mesh.position.x, s.mesh.position.y, cZ, s.w, cD, s.colorIdx);
+      applyLeanImpulse(0, delta * 0.5);
     }
     newCX = prev.cx; newW = prev.w;
   }
 
   if (newW < MIN_SIZE || newD < MIN_SIZE) { gameOver(); return; }
+
+  // BOMB perfect: restore block size toward START_W
+  if (bt.isBomb && perfect) {
+    newW = Math.min(newW * 1.6, START_W * 0.85);
+    newD = Math.min(newD * 1.6, START_W * 0.85);
+    burst(newCX ?? 0, blockY(stack.length) + BH/2, newCZ ?? 0, 0xf87171, 35);
+    burst(newCX ?? 0, blockY(stack.length) + BH/2, newCZ ?? 0, 0xfbbf24, 20);
+  }
 
   const idx = stack.length, y = blockY(idx);
   const mesh = makeMesh(newW, newD, s.colorIdx, false);
@@ -813,7 +1198,8 @@ function place() {
   stack.push({ mesh, cx: newCX, cz: newCZ, w: newW, d: newD, colorIdx: s.colorIdx });
 
   disposeMesh(s.mesh); slider = null;
-  score++;
+  const bonusScore = bt.scoreBonus || 0;
+  score += 1 + bonusScore;
   if (perfect) {
     perfectCount++;
     comboCount++;
@@ -825,11 +1211,30 @@ function place() {
   updateHUD(); popScore(); playSFX(perfect);
   if (perfect) { flashPerfect(); if (comboCount >= 2) flashCombo(comboCount); }
   haptic(perfect ? [30, 20, 30] : [15]);
+  checkZone(score);
 
   burst(newCX, y + BH/2, newCZ, PAL[s.colorIdx % PAL.length].em, perfect ? 26 : 10);
   fill.position.y = y + 4;
   lookY = y + 2;
   nextSlider();
+}
+
+// ── Bomb miss ──────────────────────────────────────────────────
+function bombMiss() {
+  // BOMB missed completely: spectacular explosion then game over
+  phase = 'exploding'; // prevent further input
+  if (slider) { disposeMesh(slider.mesh); slider = null; }
+  const topY = blockY(stack.length - 1) + BH/2;
+  for (let i = 0; i < 4; i++) {
+    setTimeout(() => {
+      burst(
+        (Math.random()-.5)*3, topY + i*0.5, (Math.random()-.5)*3,
+        [0xf87171, 0xfbbf24, 0xfde68a][i%3], 18
+      );
+    }, i * 80);
+  }
+  beep(80, 0.4, 'sawtooth', 0.2);
+  setTimeout(() => gameOver(), 380);
 }
 
 // ── Game over ──────────────────────────────────────────────────
@@ -841,6 +1246,8 @@ function gameOver() {
   burst(0, blockY(stack.length - 1) + BH/2, 0, 0xf87171, 28);
   hintEl.classList.add('gone');
   $('btn-pause').style.display = 'none';
+  $('block-type-badge').classList.add('hidden');
+  $('lean-ring').style.opacity = 0;
 
   const wasRecord = score > 0 && score >= (loadScores()[0] || 0);
   const scores = saveScore(score);
@@ -974,35 +1381,46 @@ let lastTs = 0;
     dbgEl.textContent = `FPS ${fpsDisplay}  Draw ${ri.render.calls}  Tri ${(ri.render.triangles/1000).toFixed(1)}k`;
   }
 
-  if (phase === 'playing' || phase === 'paused') {
+  if (phase === 'playing' || phase === 'paused' || phase === 'exploding') {
     if (phase !== 'paused') {
-    // Slider movement
+    // Lean & wind (only during active play)
+    if (phase === 'playing') { tickLean(dt); tickWind(dt); }
+
+    // Slider movement — center shifted by lean offset
     if (slider) {
       const s = slider, prev = stack[stack.length - 1];
       const trv = speed * dt * slideDir, lim = START_W * 1.7;
+      // lean shifts the oscillation center
+      const leanCX = prev.cx + lean.x * 0.35;
+      const leanCZ = prev.cz + lean.z * 0.35;
       if (slideAxis === 'x') {
         s.mesh.position.x += trv;
-        if (s.mesh.position.x > prev.cx + lim) slideDir = -1;
-        if (s.mesh.position.x < prev.cx - lim) slideDir =  1;
+        if (s.mesh.position.x > leanCX + lim) slideDir = -1;
+        if (s.mesh.position.x < leanCX - lim) slideDir =  1;
       } else {
         s.mesh.position.z += trv;
-        if (s.mesh.position.z > prev.cz + lim) slideDir = -1;
-        if (s.mesh.position.z < prev.cz - lim) slideDir =  1;
+        if (s.mesh.position.z > leanCZ + lim) slideDir = -1;
+        if (s.mesh.position.z < leanCZ - lim) slideDir =  1;
       }
-      // Float + emissive pulse
-      s.mesh.position.y = blockY(stack.length) + Math.sin(rawTs * 0.0025) * 0.045;
-      const emi = 0.3 + 0.25 * Math.sin(rawTs * 0.004);
+      // Float + emissive pulse (speed up for TURBO, pulse color for BOMB)
+      const floatAmp = currentBlockType === 'TURBO' ? 0.09 : 0.045;
+      s.mesh.position.y = blockY(stack.length) + Math.sin(rawTs * 0.0025) * floatAmp;
+      const emiBase = currentBlockType === 'BOMB' ? 0.5 : 0.3;
+      const emiAmp  = currentBlockType === 'BOMB' ? 0.45 : 0.25;
+      const emi = emiBase + emiAmp * Math.sin(rawTs * (currentBlockType === 'BOMB' ? 0.008 : 0.004));
       if (s.mesh.material[2]?.emissive) s.mesh.material[2].emissiveIntensity = emi;
     }
 
     tickParticles(dt);
     tickFallers(dt);
 
-    // Camera
+    // Camera: slight tilt toward lean direction
     const tCamY = Math.max(16, (lookY - 2) + 16);
     camY += (tCamY - camY) * Math.min(dt * 3, 1);
+    const camLookX = lean.x * 0.15;
+    const camLookZ = lean.z * 0.15;
     camera.position.set(CAM_X, camY, CAM_Z);
-    camera.lookAt(0, lookY, 0);
+    camera.lookAt(camLookX, lookY, camLookZ);
 
     // Point light slow drift
     fill.position.x = Math.sin(rawTs * 0.0005) * 2;
@@ -1015,10 +1433,11 @@ let lastTs = 0;
 })(0);
 
 // ── Input ──────────────────────────────────────────────────────
-renderer.domElement.addEventListener('click',      ()   => { if (phase === 'playing') place(); });
-renderer.domElement.addEventListener('touchstart', e    => { e.preventDefault(); if (phase === 'playing') place(); }, { passive: false });
+const canPlace = () => phase === 'playing';
+renderer.domElement.addEventListener('click',      ()   => { if (canPlace()) place(); });
+renderer.domElement.addEventListener('touchstart', e    => { e.preventDefault(); if (canPlace()) place(); }, { passive: false });
 document.addEventListener('keydown',               e    => {
-  if (e.code === 'Space') { e.preventDefault(); if (phase === 'playing') place(); }
+  if (e.code === 'Space') { e.preventDefault(); if (canPlace()) place(); }
 });
 
 // ── Start / Restart ────────────────────────────────────────────
