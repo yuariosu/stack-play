@@ -207,13 +207,113 @@ html,body{width:100%;height:100%;overflow:hidden;
 @keyframes blink{0%,100%{opacity:.2}50%{opacity:.8}}
 
 /* ── Speed bar ───────────────────────────────────── */
-#spd{position:fixed;bottom:0;left:0;right:0;height:2px;
-  background:rgba(255,255,255,.04);z-index:10}
+#spd-wrap{position:fixed;bottom:0;left:0;right:0;z-index:10;padding:0 0 6px}
+#spd-label{
+  text-align:center;font-size:9px;font-weight:500;letter-spacing:.15em;
+  text-transform:uppercase;color:rgba(232,228,240,.3);margin-bottom:3px}
+#spd{height:4px;background:rgba(255,255,255,.06);margin:0 20px;border-radius:2px}
 #spd-fill{
-  height:100%;width:8%;
+  height:100%;width:8%;border-radius:2px;
   background:linear-gradient(90deg,#6d28d9,#a78bfa,#c4b5fd);
   box-shadow:0 0 12px rgba(167,139,250,1),0 0 30px rgba(124,58,237,.5);
   transition:width .6s ease}
+
+/* ── Controls (mute / pause) ─────────────────────── */
+#controls{
+  position:fixed;top:18px;left:18px;display:flex;gap:10px;z-index:10;
+  pointer-events:auto}
+.ctrl-btn{
+  width:38px;height:38px;border:none;cursor:pointer;
+  background:rgba(255,255,255,.06);border:1px solid rgba(167,139,250,.2);
+  border-radius:10px;color:rgba(232,228,240,.6);font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .2s,transform .15s;backdrop-filter:blur(8px)}
+.ctrl-btn:hover{background:rgba(167,139,250,.18);color:#e8e4f0;transform:scale(1.08)}
+.ctrl-btn:active{transform:scale(.92)}
+.ctrl-btn.muted{color:rgba(232,228,240,.25)}
+
+/* ── Combo counter ───────────────────────────────── */
+#combo{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1.4rem,5vw,2.2rem);font-weight:700;letter-spacing:.1em;
+  color:#fde68a;
+  filter:drop-shadow(0 0 14px rgba(251,191,36,.8));
+  pointer-events:none;z-index:30;opacity:0;top:52%}
+#combo.show{animation:combofx .9s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes combofx{
+  0%{opacity:0;transform:translate(-50%,0%) scale(.7)}
+  20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}
+  60%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-70%) scale(.95)}}
+
+/* ── Pause overlay ───────────────────────────────── */
+#pause-overlay{
+  position:fixed;inset:0;z-index:25;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(5,5,15,.75);backdrop-filter:blur(12px);
+  transition:opacity .3s,visibility .3s}
+#pause-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.pause-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2.5rem,10vw,4rem);font-weight:700;
+  letter-spacing:.12em;
+  background:linear-gradient(145deg,#ede9fe,#a78bfa,#7c3aed);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 24px rgba(167,139,250,.5));
+  margin-bottom:32px}
+.pause-hint{
+  font-size:12px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(232,228,240,.35);margin-top:20px}
+
+/* ── Countdown overlay ───────────────────────────── */
+#countdown{
+  position:fixed;inset:0;z-index:25;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none}
+#countdown.hidden{display:none}
+#countdown-val{
+  font-family:'Space Mono',monospace;
+  font-size:clamp(6rem,25vw,12rem);font-weight:700;line-height:1;
+  background:linear-gradient(145deg,#ede9fe 0%,#a78bfa 40%,#7c3aed 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 40px rgba(167,139,250,.7));
+  animation:cdpop .7s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes cdpop{
+  0%{transform:scale(1.8);opacity:0}
+  30%{opacity:1;transform:scale(1)}
+  80%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(.7)}}
+
+/* ── Game over – stats row ───────────────────────── */
+.go-stats{
+  display:flex;gap:24px;margin-bottom:28px;margin-top:-8px}
+.go-stat{text-align:center}
+.go-stat-label{
+  font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(232,228,240,.28);margin-bottom:4px}
+.go-stat-val{
+  font-family:'Space Mono',monospace;font-size:1.5rem;font-weight:700;
+  color:#c4b5fd;filter:drop-shadow(0 0 8px rgba(167,139,250,.4))}
+.go-stat-val.gold{color:#f59e0b;filter:drop-shadow(0 0 8px rgba(245,158,11,.4))}
+
+/* ── High score list ─────────────────────────────── */
+.go-scores{
+  width:100%;margin-bottom:28px;
+  border-top:1px solid rgba(255,255,255,.06);
+  padding-top:16px}
+.go-scores-title{
+  font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(232,228,240,.25);margin-bottom:10px;text-align:center}
+.go-score-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:3px 0;font-size:12px}
+.go-score-rank{color:rgba(232,228,240,.3);font-size:10px;width:20px}
+.go-score-num{
+  font-family:'Space Mono',monospace;font-weight:700;
+  color:rgba(232,228,240,.7)}
+.go-score-row.current .go-score-num{color:#fde68a}
+.go-score-row.current .go-score-rank{color:#fde68a}
 
 /* ── Debug ───────────────────────────────────────── */
 #dbg{position:fixed;top:0;left:0;z-index:9999;
@@ -233,10 +333,30 @@ html,body{width:100%;height:100%;overflow:hidden;
     <div id="best-val">0</div>
   </div>
 </div>
+<div id="controls">
+  <button class="ctrl-btn" id="btn-mute" title="ミュート">🔊</button>
+  <button class="ctrl-btn" id="btn-pause" title="ポーズ" style="display:none">⏸</button>
+</div>
 <div id="perfect">PERFECT</div>
-<div id="hint">タップして止める</div>
-<div id="spd"><div id="spd-fill"></div></div>
+<div id="combo"></div>
+<div id="hint">タップ / スペースで止める</div>
+<div id="spd-wrap">
+  <div id="spd-label">SPEED</div>
+  <div id="spd"><div id="spd-fill"></div></div>
+</div>
 <div id="dbg"></div>
+
+<!-- Pause overlay -->
+<div id="pause-overlay" class="hidden">
+  <div class="pause-title">PAUSED</div>
+  <button class="btn-primary" id="btn-resume">再開</button>
+  <div class="pause-hint">ESC / P でも再開</div>
+</div>
+
+<!-- Countdown overlay -->
+<div id="countdown" class="hidden">
+  <div id="countdown-val">3</div>
+</div>
 
 <!-- ── Start Screen ─────────────────────────────── -->
 <div class="screen" id="start-screen">
@@ -276,6 +396,20 @@ html,body{width:100%;height:100%;overflow:hidden;
     <div class="go-eyebrow">SCORE</div>
     <div class="go-score-val" id="go-score-val">0</div>
     <div class="go-best-msg"  id="go-best-msg"></div>
+    <div class="go-stats">
+      <div class="go-stat">
+        <div class="go-stat-label">PERFECT</div>
+        <div class="go-stat-val" id="go-perfect-val">0</div>
+      </div>
+      <div class="go-stat">
+        <div class="go-stat-label">MAX COMBO</div>
+        <div class="go-stat-val gold" id="go-combo-val">0</div>
+      </div>
+    </div>
+    <div class="go-scores" id="go-scores-wrap">
+      <div class="go-scores-title">BEST SCORES</div>
+      <div id="go-scores-list"></div>
+    </div>
     <button class="btn-primary" id="btn-restart">もう一度</button>
   </div>
 </div>
@@ -291,17 +425,24 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 
 // ── DOM ────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
-const scoreEl  = $('score-val');
-const bestEl   = $('best-val');
-const spdFill  = $('spd-fill');
-const perfectEl= $('perfect');
-const hintEl   = $('hint');
-const dbgEl    = $('dbg');
-const startScr = $('start-screen');
-const goScr    = $('gameover-screen');
-const goScore  = $('go-score-val');
-const goBest   = $('go-best-msg');
-const startCvs = $('start-canvas');
+const scoreEl     = $('score-val');
+const bestEl      = $('best-val');
+const spdFill     = $('spd-fill');
+const perfectEl   = $('perfect');
+const comboEl     = $('combo');
+const hintEl      = $('hint');
+const dbgEl       = $('dbg');
+const startScr    = $('start-screen');
+const goScr       = $('gameover-screen');
+const goScore     = $('go-score-val');
+const goBest      = $('go-best-msg');
+const goPerfect   = $('go-perfect-val');
+const goCombo     = $('go-combo-val');
+const goScoreList = $('go-scores-list');
+const startCvs    = $('start-canvas');
+const pauseOvl    = $('pause-overlay');
+const countdownEl = $('countdown');
+const cdVal       = $('countdown-val');
 
 // ── Particle bg (2D canvas, start screen) ──────────────────────
 {
@@ -438,19 +579,38 @@ const PAL = [
   { top:0x0d9488, side:0x134e4a, em:0x2dd4bf },
 ];
 
+// ── LocalStorage helpers ───────────────────────────────────────
+const LS_KEY = 'stack3d_scores';
+function loadScores() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch(_) { return []; }
+}
+function saveScore(s) {
+  const arr = loadScores();
+  arr.push(s);
+  arr.sort((a, b) => b - a);
+  arr.splice(10); // keep top 10
+  try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(_) {}
+  return arr;
+}
+
 // ── State ──────────────────────────────────────────────────────
-let phase     = 'start';
-let score     = 0;
-let best      = 0;
-let stack     = [];
-let slider    = null;
-let slideDir  = 1;
-let slideAxis = 'x';
-let speed     = BASE_SPD;
-let lookY     = 2;
-let particles = [];
-let fallers   = [];
-let fpsFrames = 0, fpsSec = 0, fpsDisplay = 0;
+let phase       = 'start';
+let score       = 0;
+let best        = loadScores()[0] || 0;
+let stack       = [];
+let slider      = null;
+let slideDir    = 1;
+let slideAxis   = 'x';
+let speed       = BASE_SPD;
+let lookY       = 2;
+let particles   = [];
+let fallers     = [];
+let fpsFrames   = 0, fpsSec = 0, fpsDisplay = 0;
+let perfectCount= 0;
+let comboCount  = 0;
+let maxCombo    = 0;
+let muted       = false;
+let paused      = false;
 
 // ── Block mesh factory (luxury materials) ─────────────────────
 function blockY(idx) { return idx * (BH + GAP) + BH / 2; }
@@ -574,6 +734,7 @@ function initGame() {
   fallers.forEach(f => disposeMesh(f.mesh)); fallers = [];
 
   score = 0; speed = BASE_SPD; slideAxis = 'x'; slideDir = 1; lookY = 2; camY = 16;
+  perfectCount = 0; comboCount = 0; maxCombo = 0;
 
   const base = makeMesh(START_W, START_W, 0, false);
   base.position.set(0, blockY(0), 0);
@@ -653,8 +814,17 @@ function place() {
 
   disposeMesh(s.mesh); slider = null;
   score++;
+  if (perfect) {
+    perfectCount++;
+    comboCount++;
+    if (comboCount > maxCombo) maxCombo = comboCount;
+  } else {
+    comboCount = 0;
+  }
+  if (score > best) best = score;
   updateHUD(); popScore(); playSFX(perfect);
-  if (perfect) flashPerfect();
+  if (perfect) { flashPerfect(); if (comboCount >= 2) flashCombo(comboCount); }
+  haptic(perfect ? [30, 20, 30] : [15]);
 
   burst(newCX, y + BH/2, newCZ, PAL[s.colorIdx % PAL.length].em, perfect ? 26 : 10);
   fill.position.y = y + 4;
@@ -666,13 +836,31 @@ function place() {
 function gameOver() {
   phase = 'gameover';
   playSFXFail();
+  haptic([100]);
   if (slider) { disposeMesh(slider.mesh); slider = null; }
   burst(0, blockY(stack.length - 1) + BH/2, 0, 0xf87171, 28);
   hintEl.classList.add('gone');
+  $('btn-pause').style.display = 'none';
+
+  const wasRecord = score > 0 && score >= (loadScores()[0] || 0);
+  const scores = saveScore(score);
   if (score > best) best = score;
-  goScore.textContent = score;
-  goBest.textContent  = score > 0 && score === best ? '🏆 新記録！' : '';
-  bestEl.textContent  = best;
+
+  goScore.textContent  = score;
+  goBest.textContent   = wasRecord ? '🏆 新記録！' : '';
+  goPerfect.textContent= perfectCount;
+  goCombo.textContent  = maxCombo;
+  bestEl.textContent   = best;
+
+  // Build score list
+  goScoreList.innerHTML = '';
+  scores.slice(0, 5).forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'go-score-row' + (s === score && i === scores.indexOf(score) ? ' current' : '');
+    row.innerHTML = `<span class="go-score-rank">#${i+1}</span><span class="go-score-num">${s}</span>`;
+    goScoreList.appendChild(row);
+  });
+
   setTimeout(() => goScr.classList.remove('hidden'), 800);
 }
 
@@ -680,9 +868,16 @@ function gameOver() {
 function updateHUD()    { scoreEl.textContent = score; bestEl.textContent = best; }
 function popScore()     { scoreEl.classList.remove('pop'); void scoreEl.offsetWidth; scoreEl.classList.add('pop'); setTimeout(() => scoreEl.classList.remove('pop'), 260); }
 function flashPerfect() { perfectEl.classList.remove('show'); void perfectEl.offsetWidth; perfectEl.classList.add('show'); }
+function flashCombo(n)  {
+  comboEl.textContent = n + 'x COMBO!';
+  comboEl.classList.remove('show'); void comboEl.offsetWidth; comboEl.classList.add('show');
+}
 function updateSpeedBar() {
   const p = ((speed - BASE_SPD) / (MAX_SPD - BASE_SPD)) * 88 + 12;
   spdFill.style.width = p + '%';
+}
+function haptic(pattern) {
+  if (navigator.vibrate) try { navigator.vibrate(pattern); } catch(_) {}
 }
 
 // ── Audio ──────────────────────────────────────────────────────
@@ -692,7 +887,7 @@ function ensureAudio() {
   actx.resume();
 }
 function beep(freq, dur, type = 'sine', vol = 0.1) {
-  if (!actx) return;
+  if (!actx || muted) return;
   try {
     const o = actx.createOscillator(), g = actx.createGain();
     o.type = type; o.frequency.value = freq;
@@ -712,6 +907,58 @@ function playSFXFail() {
   beep(200, 0.08, 'sawtooth', 0.13); setTimeout(() => beep(140, 0.12, 'sawtooth', 0.1), 85); setTimeout(() => beep(90, 0.22, 'sawtooth', 0.07), 185);
 }
 
+// ── Mute toggle ────────────────────────────────────────────────
+$('btn-mute').addEventListener('click', e => {
+  e.stopPropagation();
+  muted = !muted;
+  $('btn-mute').textContent = muted ? '🔇' : '🔊';
+  $('btn-mute').classList.toggle('muted', muted);
+});
+
+// ── Pause / Resume ─────────────────────────────────────────────
+function togglePause() {
+  if (phase !== 'playing' && phase !== 'paused') return;
+  if (phase === 'playing') {
+    phase = 'paused';
+    pauseOvl.classList.remove('hidden');
+    $('btn-pause').textContent = '▶';
+  } else {
+    phase = 'playing';
+    pauseOvl.classList.add('hidden');
+    $('btn-pause').textContent = '⏸';
+  }
+}
+$('btn-pause').addEventListener('click',  e => { e.stopPropagation(); togglePause(); });
+$('btn-resume').addEventListener('click', e => { e.stopPropagation(); togglePause(); });
+document.addEventListener('keydown', e => {
+  if (e.code === 'Escape' || e.code === 'KeyP') { e.preventDefault(); togglePause(); }
+});
+
+// ── Countdown ──────────────────────────────────────────────────
+function runCountdown(cb) {
+  countdownEl.classList.remove('hidden');
+  let n = 3;
+  function tick() {
+    cdVal.textContent = n > 0 ? n : 'GO!';
+    // re-trigger animation
+    cdVal.style.animation = 'none';
+    void cdVal.offsetWidth;
+    cdVal.style.animation = '';
+    if (n > 0) {
+      beep(440 + n * 110, 0.12, 'sine', 0.12);
+      n--;
+      setTimeout(tick, 700);
+    } else {
+      beep(880, 0.2, 'sine', 0.18);
+      setTimeout(() => {
+        countdownEl.classList.add('hidden');
+        cb();
+      }, 650);
+    }
+  }
+  tick();
+}
+
 // ── Main loop ──────────────────────────────────────────────────
 let lastTs = 0;
 (function mainLoop(rawTs) {
@@ -727,7 +974,8 @@ let lastTs = 0;
     dbgEl.textContent = `FPS ${fpsDisplay}  Draw ${ri.render.calls}  Tri ${(ri.render.triangles/1000).toFixed(1)}k`;
   }
 
-  if (phase === 'playing') {
+  if (phase === 'playing' || phase === 'paused') {
+    if (phase !== 'paused') {
     // Slider movement
     if (slider) {
       const s = slider, prev = stack[stack.length - 1];
@@ -759,6 +1007,7 @@ let lastTs = 0;
     // Point light slow drift
     fill.position.x = Math.sin(rawTs * 0.0005) * 2;
     fill.position.z = Math.cos(rawTs * 0.0005) * 2;
+    } // end not paused
   }
 
   renderer.info.reset();
@@ -768,20 +1017,30 @@ let lastTs = 0;
 // ── Input ──────────────────────────────────────────────────────
 renderer.domElement.addEventListener('click',      ()   => { if (phase === 'playing') place(); });
 renderer.domElement.addEventListener('touchstart', e    => { e.preventDefault(); if (phase === 'playing') place(); }, { passive: false });
-document.addEventListener('keydown',               e    => { if (e.code === 'Space') { e.preventDefault(); if (phase === 'playing') place(); } });
+document.addEventListener('keydown',               e    => {
+  if (e.code === 'Space') { e.preventDefault(); if (phase === 'playing') place(); }
+});
 
 // ── Start / Restart ────────────────────────────────────────────
 function startGame() {
   ensureAudio();
-  phase = 'playing';
+  phase = 'countdown';
   startScr.classList.add('hidden');
   startCvs.classList.add('gone');
   goScr.classList.add('hidden');
-  hintEl.classList.remove('gone');
+  hintEl.classList.add('gone');
   initGame();
+  runCountdown(() => {
+    phase = 'playing';
+    hintEl.classList.remove('gone');
+    $('btn-pause').style.display = 'flex';
+  });
 }
 $('btn-start').addEventListener('click',   e => { e.stopPropagation(); startGame(); });
 $('btn-restart').addEventListener('click', e => { e.stopPropagation(); startGame(); });
+
+// Init best score display
+bestEl.textContent = best;
 
 // ── Test hooks ─────────────────────────────────────────────────
 window.render_game_to_text = () => JSON.stringify({
